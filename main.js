@@ -62,14 +62,23 @@
     const cta = $('#calcCta');
     // Low/high multiples of monthly revenue, by time in business. Illustrative only.
     const MULT = { '6-12': [0.5, 0.9], '1-2': [0.6, 1.1], '2-5': [0.75, 1.3], '5+': [0.85, 1.5] };
-    const MIN = 10000, MAX = 500000;
+    const MIN = 10000, MAX = 3000000;
     const round = n => Math.round(n / 1000) * 1000;
 
+    // The slider runs 0-100 on a logarithmic scale: $15K at the left, $2M+ at the right,
+    // so small and very large businesses both get fine control.
+    const REV_MIN = 15000, REV_MAX = 2000000;
+    const revenueAt = pos => {
+      const raw = REV_MIN * Math.pow(REV_MAX / REV_MIN, pos / 100);
+      const step = raw < 100000 ? 5000 : raw < 1000000 ? 25000 : 50000;
+      return Math.round(raw / step) * step;
+    };
+
     const update = () => {
-      const r = Number(rev.value);
-      const pct = (r - Number(rev.min)) / (Number(rev.max) - Number(rev.min)) * 100;
-      rev.style.setProperty('--fill', pct + '%');
-      out.textContent = money(r) + (r >= Number(rev.max) ? '+' : '');
+      const pos = Number(rev.value);
+      const r = revenueAt(pos);
+      rev.style.setProperty('--fill', pos + '%');
+      out.textContent = money(r) + (pos >= Number(rev.max) ? '+' : '');
       rev.setAttribute('aria-valuetext', out.textContent + ' per month');
 
       const t = tib.value;
